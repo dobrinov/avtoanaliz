@@ -22,6 +22,14 @@ export const PANEL_CSS = `
       from { transform: translateX(100%); }
       to { transform: translateX(0); }
     }
+    .dbz-panel-exiting {
+      animation: dbz-drawer-out 0.22s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+      pointer-events: none;
+    }
+    @keyframes dbz-drawer-out {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(105%); opacity: 0; }
+    }
 
     /* Minimized (floating) icon — drags freely, clicks open the drawer */
     .dbz-mini {
@@ -51,6 +59,22 @@ export const PANEL_CSS = `
     @keyframes dbz-mini-in {
       from { opacity: 0; transform: scale(0.8); }
       to { opacity: 1; transform: scale(1); }
+    }
+    /* Attention ripple — runs once when the user has just minimized the panel,
+       so the eye can find the new icon. */
+    .dbz-mini-attention { position: fixed; }
+    .dbz-mini-attention::after {
+      content: "";
+      position: absolute;
+      inset: -2px;
+      border-radius: 50%;
+      border: 2px solid #38bdf8;
+      pointer-events: none;
+      animation: dbz-mini-ripple 1.4s cubic-bezier(0.2, 0, 0.4, 1) forwards;
+    }
+    @keyframes dbz-mini-ripple {
+      0%   { transform: scale(0.85); opacity: 0.9; border-width: 3px; }
+      100% { transform: scale(2.4);  opacity: 0;   border-width: 1px; }
     }
     .dbz-mono { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; font-variant-numeric: tabular-nums; }
     .dbz-display { font-family: "Caveat", "Georgia", serif; font-weight: 700; letter-spacing: -0.01em; line-height: 1; }
@@ -243,7 +267,7 @@ export const PANEL_CSS = `
     .dbz-scan-pct { color: #94a3b8; }
 
     .dbz-body {
-      padding: 14px; overflow-y: auto; flex: 1; min-height: 0;
+      padding: 14px; overflow-y: auto; overflow-x: clip; flex: 1; min-height: 0;
     }
     .dbz-body::-webkit-scrollbar { width: 6px; }
     .dbz-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
@@ -396,6 +420,8 @@ export const PANEL_CSS = `
       background: var(--panel-bg, #1e293b);
       padding: 0 3px;
     }
+    .dbz-tick-start { left: 0 !important; transform: none; text-align: left; padding-left: 0; }
+    .dbz-tick-end   { left: auto !important; right: 0; transform: none; text-align: right; padding-right: 0; }
     .dbz-tick-label {
       font-family: "JetBrains Mono", ui-monospace, monospace;
       font-size: 9px;

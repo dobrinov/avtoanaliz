@@ -230,6 +230,9 @@ const translations = {
   // Share
   share: { en: "Share", bg: "Сподели" },
 
+  // Minimize
+  minimize: { en: "Minimize", bg: "Скрий" },
+
   // Settings
   settingsTitle: { en: "Settings", bg: "Настройки" },
   settingsBehavior: { en: "Behavior", bg: "Поведение" },

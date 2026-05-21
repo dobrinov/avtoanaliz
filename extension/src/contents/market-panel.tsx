@@ -151,7 +151,20 @@ export default function MarketPanel() {
     null
   )
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null)
+  const [exiting, setExiting] = useState(false)
+  const [justCollapsed, setJustCollapsed] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+
+  function handleMinimize() {
+    if (exiting) return
+    setExiting(true)
+    setTimeout(() => {
+      setPanelState("mini")
+      setExiting(false)
+      setJustCollapsed(true)
+      setTimeout(() => setJustCollapsed(false), 1500)
+    }, 220)
+  }
 
   // User preferences
   const [prefAutoOpen, setPrefAutoOpen] = useStorage<boolean>("wd-pref-auto-open", true)
@@ -549,7 +562,7 @@ export default function MarketPanel() {
     (currentProgress && !currentProgress.done) ||
     (otherProgress && !otherProgress.done)
 
-  if (panelState === "mini") {
+  if (panelState === "mini" && !exiting) {
     return (
       <MiniIcon
         storedPos={miniPosStored}
@@ -557,12 +570,13 @@ export default function MarketPanel() {
         setDragPos={setDragPos}
         onPersistPos={(pos) => setMiniPosStored(pos)}
         onOpen={() => setPanelState("open")}
+        attention={justCollapsed}
       />
     )
   }
 
   return (
-    <div className="dbz-panel">
+    <div className={exiting ? "dbz-panel dbz-panel-exiting" : "dbz-panel"}>
       <div className="dbz-head">
         <span className="dbz-brand">Джамбаз</span>
         <div className="dbz-head-actions">
@@ -592,10 +606,10 @@ export default function MarketPanel() {
           </button>
           <button
             className="dbz-hide-btn"
-            title="Close"
-            onClick={() => setPanelState("mini")}>
+            title={t("minimize", lang)}
+            onClick={handleMinimize}>
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-              <path d="M4 4l8 8M12 4l-8 8"/>
+              <path d="M3 12h10"/>
             </svg>
           </button>
         </div>
@@ -990,9 +1004,9 @@ function Distro({
       </div>
       <div className="dbz-hist-base" />
       <div className="dbz-axis">
-        <AxisTick pct={0} label="" value={formatShort(hist.min)} />
+        <AxisTick pct={0} anchor="start" label="" value={formatShort(hist.min)} />
         <AxisTick pct={pct(stats.median)} label={t("median", lang)} value={formatShort(stats.median)} emphasize />
-        <AxisTick pct={100} label="" value={formatShort(hist.max)} />
+        <AxisTick pct={100} anchor="end" label="" value={formatShort(hist.max)} />
       </div>
     </div>
   )
@@ -1003,16 +1017,22 @@ function AxisTick({
   label,
   value,
   emphasize,
+  anchor = "center",
 }: {
   pct: number
   label: string
   value: string
   emphasize?: boolean
+  anchor?: "start" | "center" | "end"
 }) {
+  const anchorClass =
+    anchor === "start" ? "dbz-tick-start" :
+    anchor === "end"   ? "dbz-tick-end" : ""
+  const style = anchor === "center" ? { left: `${pct}%` } : undefined
   return (
     <div
-      className={`dbz-tick ${emphasize ? "dbz-tick-emphasize" : ""}`}
-      style={{ left: `${pct}%` }}>
+      className={`dbz-tick ${emphasize ? "dbz-tick-emphasize" : ""} ${anchorClass}`}
+      style={style}>
       <div className="dbz-tick-label">{label}</div>
       <div className="dbz-tick-val">{value}</div>
     </div>
@@ -1432,9 +1452,11 @@ const MINI_SIZE = 48
 const DRAG_THRESHOLD = 4
 
 function defaultMiniPos(): { x: number; y: number } {
+  // Top-right corner — near where the minimize button lived, so users can
+  // visually track the panel collapsing into the icon.
   return {
     x: Math.max(8, window.innerWidth - MINI_SIZE - 16),
-    y: Math.max(8, window.innerHeight - MINI_SIZE - 16),
+    y: 16,
   }
 }
 
@@ -1555,12 +1577,14 @@ function MiniIcon({
   setDragPos,
   onPersistPos,
   onOpen,
+  attention,
 }: {
   storedPos: { x: number; y: number } | null | undefined
   dragPos: { x: number; y: number } | null
   setDragPos: (p: { x: number; y: number } | null) => void
   onPersistPos: (p: { x: number; y: number }) => void
   onOpen: () => void
+  attention?: boolean
 }) {
   const [dragging, setDragging] = useState(false)
   const dragMetaRef = useRef<{
@@ -1624,7 +1648,7 @@ function MiniIcon({
 
   return (
     <div
-      className={`dbz-mini ${dragging ? "dbz-mini-dragging" : ""}`}
+      className={`dbz-mini ${dragging ? "dbz-mini-dragging" : ""} ${attention ? "dbz-mini-attention" : ""}`}
       style={{ left: pos.x, top: pos.y }}
       onMouseDown={onMouseDown}
       title="Джамбаз"
